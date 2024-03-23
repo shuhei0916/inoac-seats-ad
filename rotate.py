@@ -11,6 +11,8 @@ def find_largest_contour_centroid(image_path):
     # Apply threshold to get binary image
     _, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
 
+    thresh = cv2.bitwise_not(thresh)
+    
     # Find contours
     contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -61,8 +63,14 @@ def generate_video(image, output_path, duration, fps):
     for angle in np.linspace(0, 360, duration * fps):
         rotated_image = rotate_image(image.copy(), centroid, angle)
   
-        video_writer.write(rotated_image)
-        cv2.imshow('hehe', rotated_image)
+        gray =  cv2.cvtColor(rotated_image, cv2.COLOR_BGR2GRAY)
+        ret, thresh = cv2.threshold(gray, 127, 255, 0)
+        contours, _ = cv2.findContours(thresh, 1, 2)
+        
+  
+  
+        video_writer.write(thresh)
+        cv2.imshow('hehe', thresh)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
         
@@ -70,7 +78,7 @@ def generate_video(image, output_path, duration, fps):
 
 def main():
     image_path = './data/seat1.png'
-    output_path = './data/vid1_0323.mp4'
+    output_path = './data/thresh_0323.mp4'
     duration = 10  # 動画の長さ（秒）
     fps = 30  # フレームレート
 
@@ -78,9 +86,9 @@ def main():
     # resized = cv2.resize(img, None, fx=0.25, fy=0.25)
     
     # img = 
-    cv2.imshow("hehe", img)
-    cv2.waitKey(0)
-    # generate_video(image_path, output_path, duration, fps)
+    # cv2.imshow("hehe", img)
+    # cv2.waitKey(0)
+    generate_video(image_path, output_path, duration, fps)
 
 
 if __name__ == "__main__":
