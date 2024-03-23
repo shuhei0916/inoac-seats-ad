@@ -1,7 +1,10 @@
 import cv2
 import numpy as np
 
-def find_largest_contour_centroid(image):
+def find_largest_contour_centroid(image_path):
+    # Read the image
+    image = cv2.imread(image_path)
+    
     # Convert to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -46,9 +49,9 @@ def rotate_image(image, centroid, angle):
 
 
 
-def generate_video(image_path, output_path, duration, fps):
+def generate_video(image, output_path, duration, fps):
     """重心を中心に回転する動画を生成する関数"""
-    image, centroid = find_largest_contour_centroid(image_path)
+    image, centroid = find_largest_contour_centroid(image)
 
     # 動画出力設定
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -66,15 +69,18 @@ def generate_video(image_path, output_path, duration, fps):
     video_writer.release()
 
 def main():
-    image_path = './data/seat1.jpg'
+    image_path = './data/seat1.png'
     output_path = './data/vid1_0323.mp4'
     duration = 10  # 動画の長さ（秒）
     fps = 30  # フレームレート
 
     img = cv2.imread(image_path)
-    resized = cv2.resize(img, None, fx=0.25, fy=0.25)
+    # resized = cv2.resize(img, None, fx=0.25, fy=0.25)
     
-    generate_video(resized, output_path, duration, fps)
+    # img = 
+    cv2.imshow("hehe", img)
+    cv2.waitKey(0)
+    # generate_video(image_path, output_path, duration, fps)
 
 
 if __name__ == "__main__":
