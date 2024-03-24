@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 
 RED = (0, 0, 255)
+BLUE = (255, 0, 0)
+
 
 def find_largest_contour(image):
     """画像から最大の輪郭を見つける関数"""
@@ -36,6 +38,7 @@ def generate_video(image_path, output_path, duration, fps):
     """重心を中心に回転する動画を生成する関数"""
     image = cv2.imread(image_path)
     height, width = image.shape[:2]
+    print("(width, height): ", (width, height))
     
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     video_writer = cv2.VideoWriter(output_path, fourcc, fps, (image.shape[1], image.shape[0]))
@@ -44,8 +47,12 @@ def generate_video(image_path, output_path, duration, fps):
     for angle in np.linspace(0, 360, duration * fps):
         # print(angle)
 
+        # アフィン変換による回転画像の作成
+        matrix = cv2.getRotationMatrix2D((width / 2, height / 2), angle, 1)
+        rotated = cv2.warpAffine(image, matrix, (width, height), borderValue=(255, 255, 255)) # 白埋め
         
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        
+        gray = cv2.cvtColor(rotated, cv2.COLOR_BGR2GRAY)
 
         # 二値化
         _, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
@@ -54,39 +61,40 @@ def generate_video(image_path, output_path, duration, fps):
         thresh = cv2.bitwise_not(thresh)
         
         contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        # print(contours)
-        # print(type(contours))
-        # print(len(contours))
-        # print(contours[0])
+        max_contours = max(contours, key=cv2.contourArea)
+        # 画像中の全輪郭を描画
+        # cv2.drawContours(rotated, contours, -1, RED, 3)
         
+        # 0番目の輪郭のみを描画
+        # cv2.drawContours(rotated, contours, 0, RED, 3)と同じ
+        cnt = contours[0]
+        cv2.drawContours(rotated, max_contours, 0, RED, 3)
         
-        # アフィン変換による回転画像の作成
-        matrix = cv2.getRotationMatrix2D((width / 2, height / 2), angle, 1)
-        rotated = cv2.warpAffine(thresh, matrix, (width, height))
-        
-        # contoursがあんまよく分かってないので要調査
-        # 最大の輪郭を取得
-        cnt = max(contours, key=cv2.contourArea)
-
-        # 最大の輪郭のみを描画 # 描画がうまくいっていない問題を調査する
-        cv2.drawContours(rotated, [cnt], -1, RED, 2)
-            
+        x, y, w, h = cv2.boundingRect(max_contours)
+        cv2.rectangle(rotated, (x, y), (x+w, y+h), BLUE, 3)
         
         # 表示と書き込み
         video_writer.write(rotated)
-        cv2.imshow("hehe", rotated)
+        cv2.imshow("hehe", thresh)
         cv2.waitKey(1)
         
         
-
+    cv2.destroyAllWindows()
     video_writer.release()
 
 
 def main():
     image_path = './data/seat1.png'
-    output_path = './data/contour_0324.mp4'
+    output_path = './data/box_with_max_contours_0324.mp4'
     duration = 10  # 動画の長さ（秒）
     fps = 30  # フレームレート
+
+    # img = cv2.imread(image_path)
+    # # cv2.line()
+    # cv2.line(img, (20, 20), (200, 200), RED, 4)
+
+    # cv2.imshow("hehe", img)
+    # cv2.waitKey(0)
 
 
     generate_video(image_path, output_path, duration, fps)
